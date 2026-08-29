@@ -1,0 +1,40 @@
+# Dependencies
+node_modules/
+*.pem
+*.key
+*.env
+
+# Environment variables
+.env*
+!.env.example
+
+# Docker
+.dockerinit
+docker-compose.logs*
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+venv/
+.env
+dist/
+
+# Frontend
+build/
+*.local
+
+# Blockchain artifacts
+blockchain/artifacts/*.json
+blockchain/build/*.json
+
+# Graph databases
+neo4j/*
+*.db
+
+# Jupyter
+.ipynb_checkpoints/
+
+# IDE
+.vscode/
+.idea/

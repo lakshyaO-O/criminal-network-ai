@@ -1,0 +1,118 @@
+version: '3.8'
+
+services:
+  # Backend API (bootstrap Express layer — ADR-001)
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    environment:
+      - NODE_ENV=development
+    volumes:
+      - ./backend:/app
+    depends_on:
+      - ai
+      - graph
+      - blockchain
+
+  # New Python API service (FastAPI target architecture — ADR-001)
+  backend-python:
+    build: ./backend-python
+    ports:
+      - "8001:8000"
+    environment:
+      - APP_DATA_DIR=/app/data/synthetic
+      - APP_NEO4J_URI=bolt://neo4j:7687
+      - APP_NEO4J_USER=neo4j
+      - APP_NEO4J_PASSWORD=password
+      - NEO4J_ENABLED=true
+      - CORS_ORIGINS=http://localhost:3000
+    volumes:
+      - ./backend-python:/app
+      - ./data:/app/data
+      - ./ai:/app/ai
+    depends_on:
+      - neo4j
+      - postgres
+
+  # AI/ML Service (shared Python modules)
+  ai:
+    build: ./ai
+    environment:
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./ai:/app
+
+  # Graph Analysis (Neo4j Community Edition for local dev)
+  neo4j:
+    image: neo4j:5.24-community
+    ports:
+      - "7474:7474"  # Neo4j Browser HTTP
+      - "7687:7687"  # Bolt protocol
+    environment:
+      - NEO4J_AUTH=neo4j/password
+      - NEO4J_PLUGINS=["apoc"]
+    volumes:
+      - neo4j_data:/data
+      - neo4j_logs:/logs
+      - neo4j_import:/var/lib/neo4j/import
+    healthcheck:
+      test: ["CMD", "cypher-shell", "-u", "neo4j", "-p", "password", "RETURN 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  # Graph legacy (kept for backwards compatibility with existing compose)
+  graph:
+    build: ./graph
+    ports:
+      - "7475:7474"
+      - "7688:7687"
+    environment:
+      - NEO4J_AUTH=neo4j/password
+    volumes:
+      - ./graph/data:/data
+
+  # Blockchain Node
+  blockchain:
+    build: ./blockchain
+    ports:
+      - "8545:8545"
+      - "9545:9545"
+    environment:
+      - GANACHE_DEFAULT_ACCOUNTS=10
+    volumes:
+      - ./blockchain:/app
+
+  # Frontend — targets FastAPI (8001) as canonical API per ADR-012;
+  # Express bootstrap remains on 8000 for deployment pipeline proof.
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - REACT_APP_API_URL=http://localhost:8001/api
+      - REACT_APP_API_URL_FALLBACK=http://localhost:8000/api
+    depends_on:
+      - backend-python
+      - backend
+    volumes:
+      - ./frontend:/app
+
+  # Database
+  postgres:
+    image: postgres:13
+    environment:
+      - POSTGRES_USER=investigator
+      - POSTGRES_PASSWORD=secure_password
+      - POSTGRES_DB=criminal_network
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+
+volumes:
+  pg_data:
+  neo4j_data:
+  neo4j_logs:
+  neo4j_import:

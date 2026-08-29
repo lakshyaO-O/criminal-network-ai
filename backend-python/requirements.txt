@@ -1,0 +1,26 @@
+# backend-python requirements for Milestone 4
+fastapi==0.141.1
+uvicorn[standard]==0.30.6
+pydantic==2.13.4
+pydantic-settings==2.5.2
+httpx==0.28.1
+psycopg[binary]>=3.2.0
+psycopg2-binary>=2.9.0
+
+# Graph analysis (Milestone 5)
+networkx==3.6.1
+
+# Graph database (optional; lazy import in repo)
+neo4j==5.24.0
+
+# NLP (optional; lazy import, no wheel for Python 3.14 yet)
+# spacy==3.8.4
+# Install manually when wheel available: pip install spacy && python -m spacy download en_core_web_sm
+
+# Type checking (run: mypy backend-python/app)
+mypy==1.11.2
+types-requests==2.32.3
+
+# Testing
+pytest==8.3.2
+pytest-asyncio==0.23.7

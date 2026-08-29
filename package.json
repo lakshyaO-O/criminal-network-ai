@@ -1,0 +1,11 @@
+{
+  "name": "criminal-network-ai",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "backend",
+    "ai",
+    "graph",
+    "blockchain"
+  ]
+}

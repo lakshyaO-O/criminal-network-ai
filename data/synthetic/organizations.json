@@ -1,0 +1,74 @@
+[
+  {
+    "org_id": "org-00001",
+    "entity_id": "org-00001",
+    "entity_type": "Organization",
+    "name": "Highgate Imports & Exports",
+    "registration_number": "REG-FIC-94012",
+    "jurisdiction": "Fictional (India-like)",
+    "metadata": {
+      "employee_count": 179
+    },
+    "created_at": "2024-01-01T21:57:08Z"
+  },
+  {
+    "org_id": "org-00002",
+    "entity_id": "org-00002",
+    "entity_type": "Organization",
+    "name": "Silverline Imports & Exports",
+    "registration_number": "REG-FIC-66985",
+    "jurisdiction": "Fictional (India-like)",
+    "metadata": {
+      "employee_count": 85
+    },
+    "created_at": "2024-01-01T21:57:08Z"
+  },
+  {
+    "org_id": "org-00003",
+    "entity_id": "org-00003",
+    "entity_type": "Organization",
+    "name": "Suncrest Traders Pvt Ltd",
+    "registration_number": "REG-FIC-44522",
+    "jurisdiction": "Fictional (India-like)",
+    "metadata": {
+      "employee_count": 261
+    },
+    "created_at": "2024-01-01T21:57:08Z"
+  },
+  {
+    "org_id": "org-00004",
+    "entity_id": "org-00004",
+    "entity_type": "Organization",
+    "name": "Highgate Enterprises",
+    "registration_number": "REG-FIC-76542",
+    "jurisdiction": "Fictional (India-like)",
+    "metadata": {
+      "employee_count": 59
+    },
+    "created_at": "2024-01-01T21:57:08Z"
+  },
+  {
+    "org_id": "org-00005",
+    "entity_id": "org-00005",
+    "entity_type": "Organization",
+    "name": "Oakhurst Imports & Exports",
+    "registration_number": "REG-FIC-93748",
+    "jurisdiction": "Fictional (India-like)",
+    "metadata": {
+      "employee_count": 264
+    },
+    "created_at": "2024-01-01T21:57:08Z"
+  },
+  {
+    "org_id": "org-00006",
+    "entity_id": "org-00006",
+    "entity_type": "Organization",
+    "name": "Stonebridge Services Ltd",
+    "registration_number": "REG-FIC-30032",
+    "jurisdiction": "Fictional (India-like)",
+    "metadata": {
+      "employee_count": 196
+    },
+    "created_at": "2024-01-01T21:57:08Z"
+  }
+]

@@ -1,0 +1,132 @@
+[
+  {
+    "location_id": "location-00001",
+    "entity_id": "location-00001",
+    "entity_type": "Location",
+    "latitude": 28.74435,
+    "longitude": 77.27284,
+    "description": "Tech Park Gate",
+    "area_name": "Fictionpur",
+    "metadata": {
+      "accuracy_meters": 47
+    },
+    "created_at": "2024-01-01T21:57:08Z"
+  },
+  {
+    "location_id": "location-00002",
+    "entity_id": "location-00002",
+    "entity_type": "Location",
+    "latitude": 28.68599,
+    "longitude": 77.06975,
+    "description": "Ring Road Junction",
+    "area_name": "Demograd",
+    "metadata": {
+      "accuracy_meters": 21
+    },
+    "created_at": "2024-01-01T21:57:08Z"
+  },
+  {
+    "location_id": "location-00003",
+    "entity_id": "location-00003",
+    "entity_type": "Location",
+    "latitude": 28.4404,
+    "longitude": 76.99281,
+    "description": "Tech Park Gate",
+    "area_name": "Demograd",
+    "metadata": {
+      "accuracy_meters": 22
+    },
+    "created_at": "2024-01-01T21:57:08Z"
+  },
+  {
+    "location_id": "location-00004",
+    "entity_id": "location-00004",
+    "entity_type": "Location",
+    "latitude": 28.49861,
+    "longitude": 77.03425,
+    "description": "Mill Lane",
+    "area_name": "Demograd",
+    "metadata": {
+      "accuracy_meters": 48
+    },
+    "created_at": "2024-01-01T21:57:08Z"
+  },
+  {
+    "location_id": "location-00005",
+    "entity_id": "location-00005",
+    "entity_type": "Location",
+    "latitude": 28.62198,
+    "longitude": 77.05559,
+    "description": "Riverside Depot",
+    "area_name": "Sampleville",
+    "metadata": {
+      "accuracy_meters": 59
+    },
+    "created_at": "2024-01-01T21:57:08Z"
+  },
+  {
+    "location_id": "location-00006",
+    "entity_id": "location-00006",
+    "entity_type": "Location",
+    "latitude": 28.41778,
+    "longitude": 77.20371,
+    "description": "Station Square",
+    "area_name": "Fictionpur",
+    "metadata": {
+      "accuracy_meters": 5
+    },
+    "created_at": "2024-01-01T21:57:08Z"
+  },
+  {
+    "location_id": "location-00007",
+    "entity_id": "location-00007",
+    "entity_type": "Location",
+    "latitude": 28.51674,
+    "longitude": 77.00233,
+    "description": "Station Square",
+    "area_name": "Demograd",
+    "metadata": {
+      "accuracy_meters": 52
+    },
+    "created_at": "2024-01-01T21:57:08Z"
+  },
+  {
+    "location_id": "location-00008",
+    "entity_id": "location-00008",
+    "entity_type": "Location",
+    "latitude": 28.55464,
+    "longitude": 77.23227,
+    "description": "Tech Park Gate",
+    "area_name": "Fictionpur",
+    "metadata": {
+      "accuracy_meters": 12
+    },
+    "created_at": "2024-01-01T21:57:08Z"
+  },
+  {
+    "location_id": "location-00009",
+    "entity_id": "location-00009",
+    "entity_type": "Location",
+    "latitude": 28.42634,
+    "longitude": 77.30324,
+    "description": "Old Fort Road",
+    "area_name": "Fictionpur",
+    "metadata": {
+      "accuracy_meters": 58
+    },
+    "created_at": "2024-01-01T21:57:08Z"
+  },
+  {
+    "location_id": "location-00010",
+    "entity_id": "location-00010",
+    "entity_type": "Location",
+    "latitude": 28.52923,
+    "longitude": 77.17101,
+    "description": "Garden Chowk",
+    "area_name": "Demograd",
+    "metadata": {
+      "accuracy_meters": 7
+    },
+    "created_at": "2024-01-01T21:57:08Z"
+  }
+]

@@ -1,0 +1,6 @@
+{
+  "name": "criminal-network-ai-graph",
+  "version": "0.1.0",
+  "description": "Graph analysis module for criminal network analysis",
+  "private": true
+}
