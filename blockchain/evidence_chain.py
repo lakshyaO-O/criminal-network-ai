@@ -36,18 +36,33 @@ class EvidenceBlock:
         return hashlib.sha256(block_string.encode()).hexdigest()
 
 
+FIXED_TIMESTAMP = 1704067200.0  # 2024-01-01T00:00:00Z deterministic
+
+
+def compute_evidence_chain_hash(evidence_id: str, payload: Dict[str, Any], previous_hash: str = "0") -> str:
+    """Deterministic chain_hash for evidence persistence.
+
+    Canonical JSON sort_keys, SHA-256 over evidence_id|previous_hash|payload.
+    Repeated identical input => identical hash. Tampering detectable via hash mismatch.
+    """
+    canonical = json.dumps({"evidence_id": evidence_id, "previous_hash": previous_hash, "payload": payload}, sort_keys=True, default=str)
+    return hashlib.sha256(canonical.encode()).hexdigest()
+
+
 class EvidenceChain:
     """Blockchain for tracking evidence provenance."""
 
-    def __init__(self):
+    def __init__(self, deterministic: bool = False):
+        self.deterministic = deterministic
         self.chain: List[EvidenceBlock] = []
         self.create_genesis_block()
 
     def create_genesis_block(self) -> EvidenceBlock:
         """Create the first block in the chain."""
+        ts = FIXED_TIMESTAMP if self.deterministic else time.time()
         block = EvidenceBlock(
             index=0,
-            timestamp=time.time(),
+            timestamp=ts,
             evidence_hash='',
             previous_hash='0',
             data={'message': 'Genesis block'},
@@ -58,9 +73,10 @@ class EvidenceChain:
     def add_block(self, evidence_hash: str, data: Dict[str, Any]) -> EvidenceBlock:
         """Add a new block to the chain."""
         previous_block = self.chain[-1]
+        ts = FIXED_TIMESTAMP if self.deterministic else time.time()
         block = EvidenceBlock(
             index=len(self.chain),
-            timestamp=time.time(),
+            timestamp=ts,
             evidence_hash=evidence_hash,
             previous_hash=previous_block.hash,
             data=data,

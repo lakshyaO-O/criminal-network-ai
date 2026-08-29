@@ -36,6 +36,19 @@ class InMemoryPersistence:
     def save_entity(self, entity_id: str, entity_type: str, payload: Dict[str, Any]) -> str:
         existed = entity_id in self.entities
         # Preserve canonical fields; merge payload
+        # Ensure deterministic chain_hash for Evidence
+        if entity_type == "Evidence" and not payload.get("chain_hash"):
+            try:
+                from blockchain.evidence_chain import compute_evidence_chain_hash
+                prev = "0"
+                if self.evidence:
+                    last = list(self.evidence.values())[-1]
+                    if last.get("chain_hash"):
+                        prev = last["chain_hash"]
+                payload = dict(payload)
+                payload["chain_hash"] = compute_evidence_chain_hash(entity_id, payload, prev)
+            except Exception:
+                pass
         self.entities[entity_id] = {"entity_id": entity_id, "entity_type": entity_type, **payload}
         # Also index by type for get_case/get_evidence helpers when appropriate
         if entity_type == "Case":
@@ -53,6 +66,20 @@ class InMemoryPersistence:
         return self.save_entity(case_id, "Case", payload)
 
     def save_evidence(self, evidence_id: str, payload: Dict[str, Any]) -> str:
+        # Deterministic chain_hash mirroring Postgres behavior
+        if not payload.get("chain_hash"):
+            try:
+                from blockchain.evidence_chain import compute_evidence_chain_hash
+                prev = "0"
+                # Use last evidence chain_hash if present for linkage
+                if self.evidence:
+                    last = list(self.evidence.values())[-1]
+                    if last.get("chain_hash"):
+                        prev = last["chain_hash"]
+                payload = dict(payload)
+                payload["chain_hash"] = compute_evidence_chain_hash(evidence_id, payload, prev)
+            except Exception:
+                pass
         return self.save_entity(evidence_id, "Evidence", payload)
 
     # -- reads --------------------------------------------------------------

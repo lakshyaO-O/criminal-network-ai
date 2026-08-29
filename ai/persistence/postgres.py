@@ -560,6 +560,22 @@ class PostgresPersistence(PersistenceBase):
         collected_at = p.get("collected_at")
         collected_by = p.get("collected_by")
         chain_hash = p.get("chain_hash")
+        # Deterministic chain_hash if not supplied: hash of canonical evidence representation
+        if not chain_hash:
+            try:
+                from blockchain.evidence_chain import compute_evidence_chain_hash
+                # Use previous hash from DB if available, else "0"
+                prev_hash = "0"
+                try:
+                    # Try to fetch last evidence chain_hash for linkage (best effort, fallback to 0)
+                    last_rows, _ = self._fetchall("SELECT chain_hash FROM evidence WHERE chain_hash IS NOT NULL ORDER BY created_at DESC LIMIT 1", ())
+                    if last_rows and last_rows[0][0]:
+                        prev_hash = last_rows[0][0]
+                except Exception:
+                    prev_hash = "0"
+                chain_hash = compute_evidence_chain_hash(entity_id, p, prev_hash)
+            except Exception:
+                chain_hash = None
         status = p.get("status") or "logged"
         metadata = json.dumps(p.get("metadata", {}))
         created_at = p.get("created_at")
