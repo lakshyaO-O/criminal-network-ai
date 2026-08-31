@@ -1,0 +1,66 @@
+[
+  {
+    "case_id": "case-00001",
+    "entity_id": "case-00001",
+    "entity_type": "Case",
+    "case_number": "SYN-CASE-2024-001",
+    "title": "Inquiry 001 (synthetic)",
+    "description": "Synthetic investigation record for development only. Describes connections between fictional entities.",
+    "case_type": "cargo_theft",
+    "status": "open",
+    "assigned_to": "person-00002",
+    "opened_at": "2025-10-24T19:19:33Z",
+    "metadata": {
+      "classification": "SYNTHETIC_DEMO"
+    },
+    "created_at": "2024-01-01T21:57:08Z"
+  },
+  {
+    "case_id": "case-00002",
+    "entity_id": "case-00002",
+    "entity_type": "Case",
+    "case_number": "SYN-CASE-2024-002",
+    "title": "Inquiry 002 (synthetic)",
+    "description": "Synthetic investigation record for development only. Describes connections between fictional entities.",
+    "case_type": "cyber_fraud",
+    "status": "under_investigation",
+    "assigned_to": "person-00003",
+    "opened_at": "2025-03-20T05:24:42Z",
+    "metadata": {
+      "classification": "SYNTHETIC_DEMO"
+    },
+    "created_at": "2024-01-01T21:57:08Z"
+  },
+  {
+    "case_id": "case-00003",
+    "entity_id": "case-00003",
+    "entity_type": "Case",
+    "case_number": "SYN-CASE-2024-003",
+    "title": "Inquiry 003 (synthetic)",
+    "description": "Synthetic investigation record for development only. Describes connections between fictional entities.",
+    "case_type": "financial_irregularity",
+    "status": "closed",
+    "assigned_to": "person-00003",
+    "opened_at": "2024-08-17T07:30:00Z",
+    "metadata": {
+      "classification": "SYNTHETIC_DEMO"
+    },
+    "created_at": "2024-01-01T21:57:08Z"
+  },
+  {
+    "case_id": "case-00004",
+    "entity_id": "case-00004",
+    "entity_type": "Case",
+    "case_number": "SYN-CASE-2024-004",
+    "title": "Inquiry 004 (synthetic)",
+    "description": "Synthetic investigation record for development only. Describes connections between fictional entities.",
+    "case_type": "cyber_fraud",
+    "status": "open",
+    "assigned_to": "person-00003",
+    "opened_at": "2024-11-03T10:21:13Z",
+    "metadata": {
+      "classification": "SYNTHETIC_DEMO"
+    },
+    "created_at": "2024-01-01T21:57:08Z"
+  }
+]

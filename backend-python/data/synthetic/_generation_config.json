@@ -1,0 +1,30 @@
+{
+  "seed": 42,
+  "generated_at_deterministic": "2024-01-01T21:57:08Z",
+  "counts": {
+    "persons": 30,
+    "organizations": 6,
+    "phone_numbers": 24,
+    "vehicles": 12,
+    "locations": 10,
+    "financial_accounts": 14,
+    "transactions": 45,
+    "communications": 120,
+    "cases": 4,
+    "firs": 4,
+    "events": 25,
+    "evidence": 8,
+    "relationships": 446
+  },
+  "patterns": [
+    "direct_relationships",
+    "indirect_relationships",
+    "communities",
+    "bridge_nodes",
+    "repeated_communications",
+    "transaction_chains",
+    "temporal_activity",
+    "unusual_behavior_demo"
+  ],
+  "safety_notice": "All data is fictional. No real PII, no real cases. System assists investigators; it never labels individuals as criminals."
+}
