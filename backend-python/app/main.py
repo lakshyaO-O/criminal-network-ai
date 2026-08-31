@@ -38,9 +38,12 @@ def create_app() -> FastAPI:
     # Do not use wildcard with credentials — resolve to explicit origins
     if "*" in allow_origins and len(allow_origins) == 1:
         allow_origins = ["http://localhost:3000", "http://localhost:8000", "http://localhost:8001"]
+    # Support Vercel deployments: allow any *.vercel.app via regex if no explicit wildcard handling
+    # If CORS_ORIGINS contains vercel.app placeholder, regex will cover preview deployments.
     app.add_middleware(
         CORSMiddleware,
         allow_origins=allow_origins,
+        allow_origin_regex=r"https://.*\.vercel\.app",
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
