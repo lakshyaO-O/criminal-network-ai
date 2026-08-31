@@ -163,7 +163,89 @@ export interface InvestigationSnapshotResponse {
   provenance: Record<string, unknown>[];
 }
 
-// M9A Explainability & Audit — adapter-ready (no fake intelligence, backend is source)
+// M12A AI Intelligence — exact backend contracts (backend-python/app/schemas.py) — analytical only, never guilt
+export interface AIStatusResponse {
+  provider: string;
+  provider_version: string;
+  available: boolean;
+  model?: string | null;
+  deterministic: boolean;
+  description?: string | null;
+  input_max_len?: number | null;
+}
+export interface AIEntityMention {
+  canonical_type: CanonicalEntityType;
+  value: string;
+  start: number | null;
+  end: number | null;
+  confidence: number;
+  extraction_method: string;
+  provenance: Record<string, unknown>;
+  needs_review: boolean;
+  metadata: Record<string, unknown>;
+}
+export interface AIRelationshipMention {
+  source_entity_index: number;
+  target_entity_index: number;
+  relationship_type: CanonicalRelationshipType;
+  confidence: number;
+  extraction_method: string;
+  provenance: Record<string, unknown>;
+  needs_review: boolean;
+  evidence_span?: string | null;
+  metadata: Record<string, unknown>;
+}
+export interface AIExtractEntitiesResponse {
+  source_id?: string | null;
+  provider: string;
+  provider_version: string;
+  model?: string | null;
+  entities: AIEntityMention[];
+  entity_count: number;
+  provenance: ProvenanceEntry[];
+  lineage: Record<string, unknown>;
+  reproducibility: Record<string, unknown>;
+}
+export interface AIExtractRelationshipsResponse {
+  source_id?: string | null;
+  provider: string;
+  provider_version: string;
+  model?: string | null;
+  relationships: AIRelationshipMention[];
+  relationship_count: number;
+  provenance: ProvenanceEntry[];
+  lineage: Record<string, unknown>;
+  reproducibility: Record<string, unknown>;
+}
+export interface AIAnalysisOut {
+  analysis_id: string;
+  analysis_type: string;
+  summary: string;
+  observations: string[];
+  analytical_interpretation: string[];
+  supporting_entity_ids: string[];
+  supporting_relationship_ids: string[];
+  supporting_evidence_ids: string[];
+  confidence: number;
+  methodology: string;
+  limitations: string;
+  provenance: ProvenanceEntry[];
+  lineage: Record<string, unknown>;
+  reproducibility: Record<string, unknown>;
+  grounding_status?: string;
+  grounding_details?: Record<string, unknown>;
+}
+export interface AIAnalyzeResponse {
+  provider: string;
+  provider_version: string;
+  model?: string | null;
+  analysis: AIAnalysisOut;
+  provenance: ProvenanceEntry[];
+  lineage: Record<string, unknown>;
+  reproducibility: Record<string, unknown>;
+}
+
+// M9A Explainability & Audit — exact backend contracts (no fake intelligence)
 export interface ProvenanceEntry {
   source: string;
   analysis_type?: string;
@@ -172,37 +254,49 @@ export interface ProvenanceEntry {
   [k: string]: unknown;
 }
 export interface ExplanationResponse {
-  target_id: string;
-  target_type: string; // finding | entity | path | indicator | centrality | community | bridge | temporal | relationship
-  title: string;
+  explanation_id: string;
+  analysis_type: string;
   summary: string;
   methodology: string;
   observations: string[];
+  contributing_entities: string[];
+  contributing_relationships: string[];
+  supporting_evidence: string[];
   parameters: Record<string, unknown>;
-  thresholds?: Record<string, unknown>;
-  supporting_entities: string[];
-  supporting_relationships: string[];
-  supporting_evidence: InvestigationEvidenceOut[];
+  thresholds: Record<string, unknown>;
+  limitations: string; // backend is string, not array — UI splits for display
   provenance: ProvenanceEntry[];
   generated_at: string;
-  limitations: string[];
-  analysis_type: string;
+  lineage: Record<string, unknown>;
+  reproducibility: Record<string, unknown>;
+  // Optional enriched payloads returned by some endpoints
+  title?: string;
+  target_id?: string;
+  target_type?: string;
+  finding?: InvestigationFindingOut | null;
+  observed_data?: { entity?: Record<string, unknown>; relationships?: Record<string, unknown>[] };
+  analytical_interpretation?: { centrality?: Record<string, number>; community?: CommunityDetailOut | null; is_bridge?: boolean; indicators?: StructuredIndicatorOut[] };
 }
 export interface AuditEvent {
   audit_id: string;
-  case_id?: string | null;
-  root_entity_id?: string | null;
-  event_type: string; // finding_generated | evidence_generated | path_computed | analysis_run | subgraph_generated
-  analysis_type: string;
-  target_id?: string | null;
-  summary: string;
+  event_type: string;
   timestamp: string;
+  case_id?: string | null;
+  entity_id?: string | null;
+  root_entity_id?: string | null;
+  analysis_type?: string | null;
+  object_id?: string | null;
+  parameters: Record<string, unknown>;
   provenance: ProvenanceEntry[];
+  status: string;
+  // Legacy UI aliases (mapped from backend) — optional
+  target_id?: string | null;
+  summary?: string;
 }
 export interface AuditTrailResponse {
-  case_id?: string | null;
   events: AuditEvent[];
   count: number;
-  truncated: boolean;
-  generated_at?: string;
+  total: number;
+  limit: number;
+  offset: number;
 }

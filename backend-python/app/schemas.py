@@ -425,3 +425,93 @@ class AuditQueryResponse(BaseModel):
     total: int
     limit: int
     offset: int
+
+
+# --- AI Assistant (Milestone 12A) ---------------------------------------------
+
+# Neutral terminology only. Confidence = analytical confidence, not p(guilt).
+
+class AIStatusResponse(BaseModel):
+    provider: str
+    provider_version: str
+    available: bool
+    model: Optional[str] = None
+    deterministic: bool = True
+    description: Optional[str] = None
+    input_max_len: Optional[int] = None
+
+
+class AIExtractEntitiesRequest(BaseModel):
+    text: str = Field(..., min_length=1, max_length=100000, description="Investigation text — treated as data, never instruction")
+    source_id: Optional[str] = Field(None, max_length=200)
+    provider: Optional[str] = Field(None, description="Override provider: deterministic|local; default from env")
+
+
+class AIExtractEntitiesResponse(BaseModel):
+    source_id: Optional[str] = None
+    provider: str
+    provider_version: str
+    model: Optional[str] = None
+    entities: List[Dict[str, Any]]  # AIEntityMention dicts (canonical_type, value, start, end, confidence, extraction_method, provenance, needs_review)
+    entity_count: int
+    provenance: List[Dict[str, Any]] = []
+    lineage: Dict[str, Any] = {}
+    reproducibility: Dict[str, Any] = {}
+
+
+class AIExtractRelationshipsRequest(BaseModel):
+    text: str = Field(..., min_length=1, max_length=100000)
+    source_id: Optional[str] = Field(None, max_length=200)
+    entities: List[Dict[str, Any]] = Field(default_factory=list, max_length=500, description="AIEntityMention list from previous call or manual")
+    structured_records: List[Dict[str, Any]] = Field(default_factory=list, max_length=200)
+    provider: Optional[str] = None
+
+
+class AIExtractRelationshipsResponse(BaseModel):
+    source_id: Optional[str] = None
+    provider: str
+    provider_version: str
+    model: Optional[str] = None
+    relationships: List[Dict[str, Any]]  # AIRelationshipMention dicts
+    relationship_count: int
+    provenance: List[Dict[str, Any]] = []
+    lineage: Dict[str, Any] = {}
+    reproducibility: Dict[str, Any] = {}
+
+
+class AIAnalyzeRequest(BaseModel):
+    analysis_type: str = Field("network_summary", description="network_summary|centrality|community|bridge|temporal|transaction_chain|indicator|finding|investigation_brief|entity_brief|network_brief")
+    text: Optional[str] = Field(None, max_length=100000, description="Optional free-form context — sanitized, not executed")
+    case_id: Optional[str] = Field(None, max_length=50)
+    root_entity_id: Optional[str] = Field(None, max_length=50)
+    graph_snapshot: Optional[Dict[str, Any]] = Field(None, description="Optional explicit snapshot; if omitted, derived from current graph")
+    provider: Optional[str] = None
+
+
+class AIAnalysisOut(BaseModel):
+    analysis_id: str
+    analysis_type: str
+    summary: str
+    observations: List[str]
+    analytical_interpretation: List[str] = Field(..., description="Grounded interpretation, not guilt")
+    supporting_entity_ids: List[str] = []
+    supporting_relationship_ids: List[str] = []
+    supporting_evidence_ids: List[str] = []
+    confidence: float = Field(..., ge=0.0, le=1.0, description="Analytical interpretation confidence, NOT guilt probability")
+    methodology: str
+    limitations: str
+    provenance: List[Dict[str, Any]] = []
+    lineage: Dict[str, Any] = {}
+    reproducibility: Dict[str, Any] = {}
+    grounding_status: str = Field("SUPPORTED", description="SUPPORTED or NEEDS_REVIEW from grounding validator")
+    grounding_details: Dict[str, Any] = Field(default_factory=dict, description="Detailed grounding checks")
+
+
+class AIAnalyzeResponse(BaseModel):
+    provider: str
+    provider_version: str
+    model: Optional[str] = None
+    analysis: AIAnalysisOut
+    provenance: List[Dict[str, Any]] = []
+    lineage: Dict[str, Any] = {}
+    reproducibility: Dict[str, Any] = {}

@@ -47,6 +47,12 @@ def create_app() -> FastAPI:
     )
 
     app.include_router(router)
+    try:
+        from app.ai_router import router as ai_router
+
+        app.include_router(ai_router)
+    except Exception:
+        pass  # AI routes optional if module missing
 
     return app
 

@@ -5,15 +5,15 @@ import { ErrorState } from "../ui/ErrorState";
 
 function Section({ title, children, count, onExplain }: { title: string; children: React.ReactNode; count?: number; onExplain?: () => void }) {
   return (
-    <div className="border border-[#262629] rounded-[8px] bg-[#17171a] overflow-hidden">
-      <div className="px-3 py-2 border-b border-[#262629] flex justify-between items-center gap-2">
-        <span className="mono text-[11px] font-semibold tracking-wide text-[#d4d4d8]">{title}</span>
-        <span className="flex items-center gap-1">
-          {onExplain && <button onClick={onExplain} aria-label={`Explain ${title}`} className="mono text-[10px] px-1.5 py-0.5 rounded-[6px] bg-[#1e1e22] border border-[#262629] text-[#8a8a90] hover:border-[#2e2e32] hover:text-[#d4d4d8] focus:outline-none focus:ring-1 focus:ring-[#3a3a3e]">Explain</button>}
-          {count !== undefined && <span className="mono text-[10px] px-1.5 py-0.5 rounded-[6px] bg-[#0e0e10] border border-[#262629] text-[#8a8a90]">{count}</span>}
+    <div className="border border-[#1e1e22] rounded-[8px] bg-[#111113] overflow-hidden">
+      <div className="px-3 py-2.5 border-b border-[#1e1e22] bg-[#0f0f11] flex justify-between items-center gap-2">
+        <span className="text-[11px] font-semibold tracking-[0.06em] text-[#a1a1aa]">{title}</span>
+        <span className="flex items-center gap-1.5">
+          {count !== undefined && <span className="mono text-[10px] px-1.5 py-0.5 rounded-full bg-[#0a0a0c] border border-[#1e1e22] text-[#8a8a90]">{count}</span>}
+          {onExplain && <button onClick={onExplain} aria-label={`Explain ${title}`} className="text-[11px] px-2 py-1 rounded-[6px] bg-[#0a0a0c] border border-[#1e1e22] text-[#8a8a90] hover:border-[#262629] hover:text-[#d4d4d8] focus:outline-none focus:ring-1 focus:ring-[#2a2a2e]">Explain</button>}
         </span>
       </div>
-      <div className="px-3 py-2">{children}</div>
+      <div className="px-3 py-3">{children}</div>
     </div>
   );
 }

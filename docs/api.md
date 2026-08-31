@@ -798,6 +798,170 @@ All explainability/audit endpoints are bounded (`limit` ≤100, findings ≤20),
 
 ---
 
+## AI-Assisted Analysis — Milestone 12A (provider-independent, analytical only)
+
+All AI endpoints are under `/api/ai/*`. They provide **investigator-assistance** analytical interpretation, never guilt/criminality scoring. Every AI output distinguishes **observed data** from **analytical interpretation**, includes **provenance**, **lineage**, **reproducibility**, and **limitations**. Confidence means analytical extraction/interpretation confidence, never p(guilt).
+
+### Provider architecture
+
+- `AIProvider` ABC (`ai/providers/base.py`) with `extract_entities`, `extract_relationships`, `analyze_patterns`, `status`.
+- `DeterministicAIProvider` (`ai/providers/deterministic.py`) — always available, reuses PatternEntityExtractor + RuleBasedRelationshipExtractor + NetworkX; deterministic hashed IDs, fixed methodology.
+- `LocalAIProvider` (`ai/providers/local.py`) — requires `AI_PROVIDER=local` + `AI_LOCAL_MODEL=mock-local` (or valid project-relative path); if not configured returns 503 `AI provider unavailable` (never fabricates). Checks file within project root, timeout bounded, marks reproducibility appropriately.
+- `AIAnalyzer` facade (`ai/ai_analyzer.py`) selects provider via env, bounds inputs (max 100k text, 500 entities, 200 structured records), sanitizes logs, never logs secrets.
+
+### `GET /api/ai/status`
+
+Provider health. No secrets returned.
+
+```json
+{
+  "provider": "deterministic",
+  "provider_version": "12A-1.0.0",
+  "available": true,
+  "model": "deterministic-rules",
+  "deterministic": true,
+  "description": "Deterministic AI provider ...",
+  "input_max_len": 100000
+}
+```
+
+Audit: `ai_analysis_requested` with `analysis_type=status`.
+
+### `POST /api/ai/extract/entities`
+
+AI-assisted entity extraction over investigation text, canonical 12 types, grounded extraction.
+
+**Request**
+```json
+{
+  "text": "Rhea Verma works for Bluepeak Traders Pvt Ltd. +91-90-1234567",
+  "source_id": "doc-001",
+  "provider": "deterministic"
+}
+```
+Validation: `text` 1..100000 (400 if empty/oversized, 422 if too long), `source_id` max 200. `provider` optional override.
+
+**Response**
+```json
+{
+  "source_id": "doc-001",
+  "provider": "deterministic",
+  "provider_version": "12A-1.0.0",
+  "model": "deterministic-rules",
+  "entities": [
+    {
+      "canonical_type": "Person",
+      "value": "Rhea Verma",
+      "start": 0,
+      "end": 10,
+      "confidence": 0.4,
+      "extraction_method": "deterministic:pattern:person_titlecase",
+      "provenance": {"provider": "deterministic", "extraction_method": "pattern:person_titlecase", "start": 0},
+      "needs_review": true,
+      "metadata": {"normalized_value": "Rhea Verma", "entity_id": "person-99901"}
+    }
+  ],
+  "entity_count": 3,
+  "provenance": [{"source": "ai_provider", "provider": "deterministic"}],
+  "lineage": {"analysis_type": "entity_extraction", "algorithm": "deterministic:pattern+rules", "deterministic": true, "timestamp": "2024-01-01T00:00:00Z"},
+  "reproducibility": {"provider": "deterministic", "input_hash": "c593b22e0137", "deterministic": true}
+}
+```
+IDs are **not invented** by AI — resolved via `EntityIndex` if known, else `entity_id` stays None until canonical resolution. `needs_review` true when `confidence <0.60`. Errors: 400 empty, 422 oversized (>100k), 422 invalid canonical_type, 503 unavailable, 504 timeout, 502 malformed.
+
+### `POST /api/ai/extract/relationships`
+
+AI-assisted relationship extraction over entities + text/structured records. Preserves canonical 11 relationship types.
+
+**Request**
+```json
+{
+  "text": "Rhea Verma works for Bluepeak Traders Pvt Ltd.",
+  "entities": [{"canonical_type": "Person", "value": "Rhea Verma", "start": 0, "end": 10, "confidence": 0.4, "extraction_method": "deterministic:pattern:person_titlecase", "provenance": {}, "needs_review": true, "metadata": {}}],
+  "structured_records": [{"record_type": "transaction", "from_account_id": "account-00001", "to_account_id": "account-00002", "amount": "50000"}],
+  "provider": "deterministic"
+}
+```
+Bounded: `entities` max 500, `structured_records` max 200 (400 otherwise). Unknown relationship types never become valid (422 if violated). Low confidence (`<0.70`) => `needs_review`.
+
+**Response**
+```json
+{
+  "relationships": [{"source_entity_index": 0, "target_entity_index": 1, "relationship_type": "WORKS_FOR", "confidence": 0.8, "extraction_method": "deterministic:rule:works_for_cue", "needs_review": false}],
+  "relationship_count": 1,
+  "provenance": [{"source": "ai_provider"}],
+  "lineage": {...},
+  "reproducibility": {...}
+}
+```
+
+### `POST /api/ai/analyze`
+
+AI-assisted interpretation over structured graph snapshot (grounded).
+
+**Request**
+```json
+{
+  "analysis_type": "network_summary",
+  "case_id": "case-00001",
+  "root_entity_id": "person-00001",
+  "graph_snapshot": {"entities": {"person-00001": ["Person", {}]}, "relationships": [{"relationship_id": "rel-00001"}]},
+  "provider": "deterministic"
+}
+```
+`analysis_type` ∈ `network_summary|centrality|community|bridge|temporal|transaction_chain|indicator|finding|investigation_brief|entity_brief|network_brief` (400 otherwise). `case_id`/`root_entity_id` validated 404 if unknown. `text` optional (1..100k). `graph_snapshot` optional — if omitted derived from current `export_snapshot()` filtered to `case_id` when supplied (case-scoped, prevents cross-case leakage; deterministic NetworkX metrics). Snapshot oversized (>500k stringified) => 400.
+
+**Response (`AIAnalyzeResponse`)**
+```json
+{
+  "provider": "deterministic",
+  "provider_version": "12A-1.0.0",
+  "analysis": {
+    "analysis_id": "ai-f6b3c7e811d3",
+    "analysis_type": "network_summary",
+    "summary": "AI-assisted interpretation for network_summary: Observed graph snapshot: 302 entities, 446 relationships",
+    "observations": ["Observed graph snapshot: 302 entities, 446 relationships", "Observed 10 bridge candidates"],
+    "analytical_interpretation": ["Analytical interpretation: centrality indicates structural position not guilt"],
+    "supporting_entity_ids": ["account-00001"],
+    "supporting_relationship_ids": ["rel-00001"],
+    "supporting_evidence_ids": ["rel-00001"],
+    "confidence": 0.85,
+    "methodology": "Deterministic provider: PatternEntityExtractor + RuleBasedRelationshipExtractor + NetworkX; grounded summary",
+    "limitations": "Analytical interpretation only; does not determine guilt, criminality, or wrongdoing; requires investigator review",
+    "provenance": [{"source": "ai_provider", "provider": "deterministic", "analysis_type": "network_summary"}],
+    "lineage": {"analysis_type": "network_summary", "algorithm": "deterministic:networkx+rules", "dataset_id": "dataset-3272155dc684", "deterministic": true},
+    "reproducibility": {"provider": "deterministic", "input_hash": "b9c073284f41", "deterministic": true}
+  },
+  "provenance": [...],
+  "lineage": {...},
+  "reproducibility": {...}
+}
+```
+`confidence` is analytical interpretation confidence (0..1, validated), **not** guilt probability. Methodology/limitations are explicit, neutral. `graph_snapshot` is source of truth — AI never invents graph facts. Errors: 400 unsupported analysis_type/empty text/oversized, 404 invalid case/entity, 503 unavailable, 504 timeout, 502 malformed, 500 forbidden terminology violation (never).
+
+### Audit for AI
+
+Every AI request records `event_type=ai_analysis_requested` via bounded audit (`GET /api/audit/events` filters as before). Parameters sanitized (no password/secret/token/connection_string), provenance includes provider/version/model/timestamp, lineage includes dataset_id/deterministic/input_hash. Use `GET /api/audit/events?analysis_type=network_summary&limit=20` to query.
+
+### Failure behavior
+
+- `provider unavailable` → 503 with `AI provider unavailable` (deterministic never unavailable; local unavailable when not configured).
+- `timeout` → 504 (real `ThreadPoolExecutor` timeout `AI_LOCAL_TIMEOUT_MS` 1..30s; simulated via `TIMEOUT_SIM` marker for tests).
+- `malformed` → 502 (simulated via `MALFORMED_SIM`).
+- `empty input` → 400.
+- `oversized` (>100k text, >500 entities, >500k snapshot) → 422/400.
+- Unknown provider → 503, never silent fallback to fabricated intelligence. Deterministic fallback is explicit provider/mode, not silent.
+
+### Evaluation & Grounding (M13)
+
+- **Dataset:** `tests/fixtures/ai/scenarios.json` v13.0.0 — 8 synthetic scenarios (see `docs/architecture.md ADR-024`).
+- **Metrics:** `python -m ai.evaluation` or `pytest tests/evaluation -q` — entity/relationship precision/recall/F1, groundedness (via `ai/grounding.py`), latency (avg/median/max/timeout), confidence calibration, reproducibility.
+- **Grounding:** Every `AIAnalysisOut` now includes `grounding_status` (`SUPPORTED`/`NEEDS_REVIEW`) and `grounding_details` (entity/relationship/evidence/case/numerical/temporal checks). Unsupported claims are flagged, not silently deleted; frontend shows grounding badge.
+- **Briefs:** `investigation_brief` / `entity_brief` / `network_brief` — same grounded logic, case-scoped when `case_id` supplied (backend filters snapshot to `RELATED_TO_CASE` subgraph).
+- **Local model:** Configure `AI_PROVIDER=local` + `AI_LOCAL_MODEL=path` (project-relative, no URL). Real model load attempted via `transformers` `local_files_only=True` (no auto-download); if missing → `LOCAL_MODEL_BLOCKER` and `503`. See `ai/providers/local.py`.
+
+---
+
 ## OpenAPI
 
 `GET /openapi.json` — full OpenAPI 3.1 spec (auto-generated by FastAPI).

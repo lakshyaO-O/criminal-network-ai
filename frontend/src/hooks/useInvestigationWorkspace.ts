@@ -32,8 +32,9 @@ export function useInvestigationWorkspace() {
     setCaseId(null); setRootId(null); setSubgraph(null); setFindings([]); setEvidence([]); setError(null); setLoading(false);
   }
   function setInvestigationDepth(d: number) {
-    if (d < 0 || d > 6) return;
-    setDepth(d);
+    const clamped = Math.max(0, Math.min(6, Math.floor(d)));
+    if (clamped !== d && (d < 0 || d > 6)) return;
+    setDepth(clamped);
   }
 
   useEffect(() => {

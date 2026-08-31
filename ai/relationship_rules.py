@@ -68,14 +68,19 @@ class RuleRelationship:
 
 # Declared rule priors (see docs/ai-pipeline.md). Fixed constants tied to
 # rule strictness — NOT learned or invented per result.
+# M14: Added priors for expanded deterministic coverage (KNOWS, USED, TRANSFERRED_TO text, LOCATED_AT text)
 RULE_PRIORS = {
     "works_for_cue": 0.80,
     "called_cue": 0.75,
     "transferred_to_structured": 1.00,  # structured transaction record
+    "transferred_to_text": 0.78,  # M14: account-account via text cue
     "traveled_to_cue": 0.75,
     "owns_cue": 0.80,
     "associated_with_cue": 0.70,
     "located_at_structured": 0.90,
+    "knows_cue": 0.55,  # M14: conservative person-person
+    "used_cue": 0.68,  # M14: person-vehicle
+    "located_at_text": 0.65,  # M14: person/location via explicit located cue
 }
 
 _CUE_WORKS = re.compile(
@@ -86,6 +91,8 @@ _CUE_CALLED = re.compile(
 _CUE_TRANSFERRED = re.compile(
     r"\b(?:transfer(?:red)?|sent|paid)\b.*\b(?:to|into)\b"
     r"|\bto\b.*\b(?:transfer|payment)\b", re.IGNORECASE)
+_CUE_TRANSFERRED_TEXT = re.compile(
+    r"\b(?:transferred|transfer|sent|paying|paid)\b", re.IGNORECASE)
 _CUE_TRAVELED = re.compile(
     r"\b(?:traveled|travelled|went|drove|flew)\s+to\b", re.IGNORECASE)
 _CUE_OWNS = re.compile(
@@ -93,6 +100,12 @@ _CUE_OWNS = re.compile(
 _CUE_ASSOCIATED = re.compile(
     r"\b(?:associated\s+with|affiliated\s+with|linked\s+to|member\s+of)\b",
     re.IGNORECASE)
+_CUE_KNOWS = re.compile(
+    r"\b(?:knows|know|knew|knowing|acquainted with|met|introduced to)\b", re.IGNORECASE)
+_CUE_USED = re.compile(
+    r"\b(?:used|using|utilized|driven|drove|operated|operating)\b", re.IGNORECASE)
+_CUE_LOCATED_TEXT = re.compile(
+    r"\b(?:located at|located in|resides at|stayed at|present at|observed at)\b", re.IGNORECASE)
 
 
 def _cue_between(text: str, start_a: int, end_a: int,
@@ -166,12 +179,13 @@ class RuleBasedRelationshipExtractor(RelationshipExtractor):
         phones = by_type.get("PhoneNumber", [])
         vehicles = by_type.get("Vehicle", [])
         locations = by_type.get("Location", [])
+        accounts = by_type.get("FinancialAccount", [])
 
         # WORKS_FOR: person --works for/at/with--> organization
         for p in persons:
             for o in orgs:
                 if _cue_between(text, p.start_offset, p.end_offset,
-                                o.start_offset, o.end_offset, _CUE_WORKS):
+                                 o.start_offset, o.end_offset, _CUE_WORKS):
                     add(p, o, "WORKS_FOR", "works_for_cue",
                         RULE_PRIORS["works_for_cue"])
 
@@ -181,34 +195,72 @@ class RuleBasedRelationshipExtractor(RelationshipExtractor):
                 if p is q or p.start_offset >= q.start_offset:
                     continue
                 if _cue_between(text, p.start_offset, p.end_offset,
-                                q.start_offset, q.end_offset, _CUE_CALLED):
+                                 q.start_offset, q.end_offset, _CUE_CALLED):
                     add(p, q, "CALLED", "called_cue",
                         RULE_PRIORS["called_cue"])
+
+        # KNOWS: conservative person-person (M14) — requires explicit knows cue, low confidence
+        for p in persons:
+            for q in persons:
+                if p is q or p.start_offset >= q.start_offset:
+                    continue
+                if _cue_between(text, p.start_offset, p.end_offset,
+                                 q.start_offset, q.end_offset, _CUE_KNOWS):
+                    add(p, q, "KNOWS", "knows_cue", RULE_PRIORS["knows_cue"])
 
         # TRAVELED_TO: person --traveled/went to--> location
         for p in persons:
             for loc in locations:
                 if _cue_between(text, p.start_offset, p.end_offset,
-                                loc.start_offset, loc.end_offset,
-                                _CUE_TRAVELED):
+                                 loc.start_offset, loc.end_offset,
+                                 _CUE_TRAVELED):
                     add(p, loc, "TRAVELED_TO", "traveled_to_cue",
                         RULE_PRIORS["traveled_to_cue"])
+
+        # LOCATED_AT text (M14): person --located at--> location (explicit cue only, both resolved)
+        for p in persons:
+            for loc in locations:
+                if p.entity_id is None or loc.entity_id is None:
+                    continue
+                if _cue_between(text, p.start_offset, p.end_offset,
+                                 loc.start_offset, loc.end_offset, _CUE_LOCATED_TEXT):
+                    add(p, loc, "LOCATED_AT", "located_at_text", RULE_PRIORS["located_at_text"])
 
         # OWNS: person --owns/registered to--> vehicle
         for p in persons:
             for v in vehicles:
                 if _cue_between(text, p.start_offset, p.end_offset,
-                                v.start_offset, v.end_offset, _CUE_OWNS):
+                                 v.start_offset, v.end_offset, _CUE_OWNS):
                     add(p, v, "OWNS", "owns_cue", RULE_PRIORS["owns_cue"])
+
+        # USED (M14): person --used--> vehicle (lower confidence, needs_review, both resolved)
+        for p in persons:
+            for v in vehicles:
+                if p.entity_id is None or v.entity_id is None:
+                    continue
+                if _cue_between(text, p.start_offset, p.end_offset,
+                                 v.start_offset, v.end_offset, _CUE_USED):
+                    add(p, v, "USED", "used_cue", RULE_PRIORS["used_cue"])
 
         # ASSOCIATED_WITH: person --associated/affiliated/member of--> org
         for p in persons:
             for o in orgs:
                 if _cue_between(text, p.start_offset, p.end_offset,
-                                o.start_offset, o.end_offset,
-                                _CUE_ASSOCIATED):
+                                 o.start_offset, o.end_offset,
+                                 _CUE_ASSOCIATED):
                     add(p, o, "ASSOCIATED_WITH", "associated_with_cue",
                         RULE_PRIORS["associated_with_cue"])
+
+        # TRANSFERRED_TO text (M14): FinancialAccount -> FinancialAccount via transfer cue (both resolved)
+        for a in accounts:
+            for b in accounts:
+                if a is b or a.start_offset >= b.start_offset:
+                    continue
+                if a.entity_id is None or b.entity_id is None:
+                    continue
+                if _cue_between(text, a.start_offset, a.end_offset,
+                                 b.start_offset, b.end_offset, _CUE_TRANSFERRED_TEXT):
+                    add(a, b, "TRANSFERRED_TO", "transferred_to_text", RULE_PRIORS["transferred_to_text"])
 
         # Structured sources: transactions are authoritative evidence of
         # TRANSFERRED_TO between accounts — no text cues required.

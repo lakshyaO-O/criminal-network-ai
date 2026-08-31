@@ -38,3 +38,10 @@ neo4j/*
 # IDE
 .vscode/
 .idea/
+# Logs
+backend.log
+backend_error.log
+frontend/dev_out.log
+frontend/dev_err.log
+tests/evaluation/results/latest.json
+

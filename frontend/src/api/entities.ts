@@ -34,7 +34,7 @@ export async function getEntityRelationships(entityId: string): Promise<EntityRe
     }));
     return { entity_id: entityId, relationships: rels };
   }
-  return apiClient.get<EntityRelationshipsOut>(`/entities/${encodeURIComponent(entityId)}/relationships`);
+  return apiClient.get<EntityRelationshipsOut>(`/entities/${encodeURIComponent(entityId)}/relationships`, { timeoutMs: 15000 });
 }
 
 export async function getNeighborhood(entityId: string, depth = 1): Promise<NeighborhoodOut> {

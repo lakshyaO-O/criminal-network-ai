@@ -10,13 +10,13 @@ export function InvestigationTimeline({ events, onSelect, loading }: { events: T
   const types = ["All", ...Array.from(new Set(events.map(e => e.eventType)))];
   const filtered = filter === "All" ? events : events.filter(e => e.eventType === filter);
 
-  if (loading) return <div className="border border-[#262629] rounded-[8px] bg-[#17171a]"><LoadingState label="Loading timeline" /></div>;
-  if (events.length === 0) return <EmptyState title="No timeline events" hint="No activity recorded for this context." />;
+  if (loading) return <div className="border border-[#1e1e22] rounded-[8px] bg-[#111113]"><LoadingState label="Loading timeline" /></div>;
+  if (events.length === 0) return <EmptyState title="No timeline events" hint="No activity recorded for this context. Select a case or entity." />;
 
   return (
-    <div className="border border-[#262629] rounded-[8px] bg-[#17171a] overflow-hidden flex flex-col" role="region" aria-label="Investigation timeline">
-      <div className="px-3 py-2 border-b border-[#262629] flex items-center justify-between gap-2 flex-wrap">
-        <div className="mono text-[11px] font-semibold tracking-wide text-[#d4d4d8]">INVESTIGATION TIMELINE</div>
+    <div className="border border-[#1e1e22] rounded-[8px] bg-[#111113] overflow-hidden flex flex-col" role="region" aria-label="Investigation timeline">
+      <div className="px-3 py-2.5 border-b border-[#1e1e22] bg-[#0f0f11] flex items-center justify-between gap-2 flex-wrap">
+        <div className="text-[11px] font-semibold tracking-[0.06em] text-[#a1a1aa]">INVESTIGATION TIMELINE</div>
         <div className="flex gap-1" role="tablist" aria-label="Filter timeline">
           {types.map(t => (
             <button key={t} role="tab" aria-selected={filter===t} onClick={() => setFilter(t)} className={`mono text-[10px] px-1.5 py-0.5 rounded-[6px] border focus:outline-none focus:ring-1 focus:ring-[#3a3a3e] ${filter===t ? "bg-[#1e1e22] border-[#2e2e32] text-[#e8e8ea]" : "border-transparent text-[#6b6b70] hover:text-[#a1a1aa]"}`}>{t}</button>

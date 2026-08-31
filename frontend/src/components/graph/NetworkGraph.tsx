@@ -95,31 +95,64 @@ export function NetworkGraph({ entities, relationships, selectedId, onSelect, lo
   const zoomIn = () => cyRef.current && cyRef.current.zoom({ level: cyRef.current.zoom() * 1.25, renderedPosition: { x: cyRef.current.width() / 2, y: cyRef.current.height() / 2 } } as any);
   const zoomOut = () => cyRef.current && cyRef.current.zoom({ level: cyRef.current.zoom() * 0.8, renderedPosition: { x: cyRef.current.width() / 2, y: cyRef.current.height() / 2 } } as any);
 
-  if (loading) return <LoadingState label="Loading network" />;
-  if (visibleEntities.length === 0) return <EmptyState title="No entities match filter" hint="Adjust node-type filters above." />;
+  if (loading) return (
+    <div className="h-[420px] border border-[#1e1e22] rounded-[8px] bg-[#0a0a0c] flex flex-col">
+      <div className="flex items-center gap-2 px-3 py-3 border-b border-[#1e1e22]">
+        <span className="w-3 h-3 border border-[#2a2a2e] border-t-[#6b6b70] rounded-full animate-spin" aria-hidden />
+        <span className="text-[13px] text-[#8a8a90]">Loading network — preparing graph</span>
+      </div>
+      <div className="flex-1 p-3 space-y-2 animate-pulse">
+        <div className="h-3 bg-[#111113] rounded w-3/4" />
+        <div className="h-3 bg-[#111113] rounded w-1/2" />
+        <div className="h-32 bg-[#111113] rounded mt-4" />
+      </div>
+    </div>
+  );
+  if (visibleEntities.length === 0) return (
+    <div className="h-[420px] border border-[#1e1e22] rounded-[8px] bg-[#0a0a0c] flex flex-col items-center justify-center p-6 text-center">
+      <div className="w-10 h-10 rounded-[8px] bg-[#111113] border border-[#1e1e22] flex items-center justify-center text-[16px] mb-3">⬡</div>
+      <div className="text-[13px] font-medium text-[#d4d4d8]">No entities match filter</div>
+      <div className="text-[13px] text-[#8a8a90] mt-1 max-w-[32ch]">Adjust node-type filters above or select a different case. The graph is case-scoped.</div>
+      <button onClick={() => setFilterTypes(new Set(allTypes))} className="mt-3 text-[12px] px-3 py-1.5 rounded-[6px] bg-[#17171a] border border-[#262629] text-[#d4d4d8] hover:bg-[#1e1e22]">Reset filters</button>
+    </div>
+  );
 
   return (
-    <div className="relative w-full h-full bg-[#0e0e10] rounded-[8px] border border-[#262629] overflow-hidden flex flex-col">
-      <div className="flex items-center gap-1 px-2 py-1.5 border-b border-[#262629] bg-[#17171a] flex-wrap" role="toolbar" aria-label="Graph filters">
+    <div className="relative w-full h-full bg-[#08080a] border border-[#1e1e22] overflow-hidden flex flex-col">
+      {/* Filter toolbar — compact */}
+      <div className="flex items-center gap-1 px-3 py-2 border-b border-[#1e1e22] bg-[#0f0f11] flex-wrap" role="toolbar" aria-label="Graph filters">
+        <span className="text-[10px] font-semibold tracking-[0.08em] text-[#6b6b70] mr-2">FILTER</span>
         {allTypes.map(t => {
           const active = filterTypes.has(t);
           return (
-            <button key={t} aria-pressed={active} aria-label={`Filter ${t}`} onClick={() => setFilterTypes(prev => { const n = new Set(prev); if (n.has(t)) n.delete(t); else n.add(t); if (n.size===0) allTypes.forEach(x=>n.add(x)); return n; })} className={`mono text-[10px] px-1.5 py-0.5 rounded-[6px] border flex items-center gap-1 ${active ? "bg-[#1e1e22] border-[#2e2e32] text-[#e8e8ea]" : "border-transparent text-[#6b6b70] hover:text-[#a1a1aa]"}`}>
-              <span className="w-2 h-2 rounded-full border border-[#262629]" style={{ background: typeColor[t] }} aria-hidden />{t}
+            <button key={t} aria-pressed={active} aria-label={`Filter ${t}`} onClick={() => setFilterTypes(prev => { const n = new Set(prev); if (n.has(t)) n.delete(t); else n.add(t); if (n.size===0) allTypes.forEach(x=>n.add(x)); return n; })} className={`text-[12px] px-2 py-1 rounded-[6px] border flex items-center gap-1.5 transition-colors ${active ? "bg-[#1a1a1e] border-[#262629] text-[#e8e8ea]" : "border-transparent text-[#6b6b70] hover:text-[#a1a1aa] hover:bg-[#111113]"}`}>
+              <span className="w-2 h-2 rounded-full border border-black/20" style={{ background: typeColor[t] }} aria-hidden />{t}
             </button>
           );
         })}
-        <span className="ml-auto mono text-[10px] text-[#6b6b70]">{visibleEntities.length} nodes • {visibleRels.length} edges</span>
-      </div>
-      <div className="relative flex-1 min-h-[300px]">
-        <div ref={containerRef} className="w-full h-full" role="application" aria-label="Network graph. Use Tab to reach controls, click nodes to select." tabIndex={0} onKeyDown={e => { if (e.key === "Escape") clear(); if (e.key === "+" || e.key === "=") zoomIn(); if (e.key === "-") zoomOut(); if (e.key === "0") fit(); }} />
-        <div className="absolute top-2 right-2 flex flex-col gap-1">
-          <button aria-label="Zoom in" onClick={zoomIn} className="w-7 h-7 rounded-[6px] bg-[#17171a] border border-[#262629] mono text-[12px] hover:bg-[#1e1e22] focus:outline-none focus:ring-1 focus:ring-[#3a3a3e]">+</button>
-          <button aria-label="Zoom out" onClick={zoomOut} className="w-7 h-7 rounded-[6px] bg-[#17171a] border border-[#262629] mono text-[12px] hover:bg-[#1e1e22] focus:outline-none focus:ring-1 focus:ring-[#3a3a3e]">−</button>
-          <button aria-label="Fit graph" onClick={fit} className="w-7 h-7 rounded-[6px] bg-[#17171a] border border-[#262629] mono text-[9px] hover:bg-[#1e1e22] focus:outline-none focus:ring-1 focus:ring-[#3a3a3e]">FIT</button>
-          <button aria-label="Clear selection" onClick={clear} className="w-7 h-7 rounded-[6px] bg-[#17171a] border border-[#262629] mono text-[9px] hover:bg-[#1e1e22] focus:outline-none focus:ring-1 focus:ring-[#3a3a3e]">CLR</button>
+        <div className="ml-auto flex items-center gap-2 mono text-[11px] text-[#6b6b70]">
+          <span className="hidden sm:inline">{visibleEntities.length} nodes • {visibleRels.length} edges</span>
+          {selectedId && <span className="px-2 py-0.5 rounded-full bg-[#e8e8ea] text-[#0a0a0c] font-medium">{selectedId}</span>}
         </div>
-        <div className="absolute bottom-1 left-2 mono text-[10px] text-[#6b6b70] hidden sm:block">drag • scroll zoom • click node • Esc clear • keyboard +/-/0</div>
+      </div>
+      <div className="relative flex-1 min-h-[380px] bg-[#08080a]">
+        <div ref={containerRef} className="w-full h-full" role="application" aria-label="Network graph. Use Tab to reach controls, click nodes to select." tabIndex={0} onKeyDown={e => { if (e.key === "Escape") clear(); if (e.key === "+" || e.key === "=") zoomIn(); if (e.key === "-") zoomOut(); if (e.key === "0") fit(); }} />
+        {/* Zoom controls */}
+        <div className="absolute top-3 right-3 flex flex-col gap-1">
+          <button aria-label="Zoom in" onClick={zoomIn} className="w-7 h-7 rounded-[6px] bg-[#111113] border border-[#1e1e22] text-[12px] hover:bg-[#17171a] hover:border-[#262629] focus:outline-none focus:ring-1 focus:ring-[#2a2a2e]">+</button>
+          <button aria-label="Zoom out" onClick={zoomOut} className="w-7 h-7 rounded-[6px] bg-[#111113] border border-[#1e1e22] text-[12px] hover:bg-[#17171a] hover:border-[#262629] focus:outline-none focus:ring-1 focus:ring-[#2a2a2e]">−</button>
+          <button aria-label="Fit graph" onClick={fit} className="w-7 h-7 rounded-[6px] bg-[#111113] border border-[#1e1e22] text-[9px] font-medium hover:bg-[#17171a] focus:outline-none focus:ring-1 focus:ring-[#2a2a2e]">FIT</button>
+          <button aria-label="Clear selection" onClick={clear} className="w-7 h-7 rounded-[6px] bg-[#111113] border border-[#1e1e22] text-[9px] font-medium hover:bg-[#17171a] focus:outline-none focus:ring-1 focus:ring-[#2a2a2e]">CLR</button>
+        </div>
+        {/* Legend */}
+        <div className="absolute bottom-2 left-2 flex items-center gap-2 px-2 py-1 rounded-full bg-[#111113]/90 border border-[#1e1e22] backdrop-blur">
+          {allTypes.slice(0,4).map(t => (
+            <span key={t} className="flex items-center gap-1 mono text-[10px] text-[#8a8a90]"><span className="w-2 h-2 rounded-full" style={{ background: typeColor[t] }} />{t}</span>
+          ))}
+          <span className="w-px h-3 bg-[#1e1e22] mx-1" aria-hidden />
+          <span className="mono text-[10px] text-[#6b6b70] hidden sm:inline">selected: white ring • hover: highlight neighbors</span>
+        </div>
+        <div className="absolute bottom-2 right-2 mono text-[10px] text-[#6b6b70] hidden lg:block bg-[#111113]/80 px-1.5 py-0.5 rounded border border-[#1e1e22]">drag • scroll • click • Esc</div>
       </div>
     </div>
   );

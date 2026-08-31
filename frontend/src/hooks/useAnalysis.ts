@@ -41,12 +41,20 @@ export function useGraphIntelligence(caseId?: string | null) {
     const seq = ++seqRef.current;
     setLoading(true); setError(null);
     setCentrality(null); setCommunities(null); setBridges(null); setTemporal(null); setChains(null); setStrength(null); setIndicators(null);
-    Promise.all([getCentrality(), getCommunities(), getBridges(), getTemporal(), getTransactionChains(), getRelationshipStrength(), getIndicators()])
-      .then(([c, com, b, t, ch, s, ind]) => {
-        if (seq !== seqRef.current) return;
-        setCentrality(c); setCommunities(com); setBridges(b); setTemporal(t); setChains(ch); setStrength(s); setIndicators(ind);
-      })
-      .catch(e=> { if (seq === seqRef.current) setError(e instanceof Error ? e.message : String(e)); })
+    // Use single aggregated analysis endpoint to reduce concurrent load (was 7 parallel, now 1)
+    // Keep 12s timeout for this heavier call
+    getAnalysis(caseId || undefined).then((analysis) => {
+      if (seq !== seqRef.current) return;
+      // Map AnalysisResponse enriched fields to individual panel shapes
+      const c = analysis.centrality ? { centrality: analysis.centrality, explanations: analysis.centrality_explanations || {} } : null;
+      const com = analysis.communities_detailed ? { communities: analysis.communities_detailed, count: analysis.communities_detailed.length } : null;
+      const b = analysis.bridges_detailed ? { bridges: analysis.bridges_detailed, count: analysis.bridges_detailed.length } : null;
+      const t = analysis.temporal_indicators ? { temporal_indicators: analysis.temporal_indicators, count: analysis.temporal_indicators.length } : null;
+      const ch = analysis.transaction_chains ? { transaction_chains: analysis.transaction_chains, count: analysis.transaction_chains.length } : null;
+      const s = analysis.relationship_strength ? { relationship_strength: analysis.relationship_strength, count: analysis.relationship_strength.length } : null;
+      const ind = analysis.indicators_enhanced ? { indicators: analysis.indicators_enhanced, count: analysis.indicators_enhanced.length } : null;
+      setCentrality(c as never); setCommunities(com as never); setBridges(b as never); setTemporal(t as never); setChains(ch as never); setStrength(s as never); setIndicators(ind as never);
+    }).catch(e=> { if (seq === seqRef.current) setError(e instanceof Error ? e.message : String(e)); })
       .finally(()=> { if (seq === seqRef.current) setLoading(false); });
   }, [caseId]);
 

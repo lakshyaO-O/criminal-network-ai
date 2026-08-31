@@ -1,10 +1,11 @@
 import React from "react";
-export function EmptyState({ title, hint, icon = "—" }: { title: string; hint?: string; icon?: string }) {
+export function EmptyState({ title, hint, icon = "—", action }: { title: string; hint?: string; icon?: string; action?: React.ReactNode }) {
   return (
-    <div className="flex flex-col items-center justify-center px-6 py-8 text-center border border-dashed border-[#262629] rounded-[8px] bg-[#17171a]">
-      <div className="w-7 h-7 rounded-[6px] border border-[#262629] bg-[#0e0e10] flex items-center justify-center mono text-[10px] text-[#6b6b70] mb-2" aria-hidden>{icon}</div>
-      <div className="mono text-[11px] text-[#a1a1aa]">{title}</div>
-      {hint && <div className="mono text-[10px] text-[#6b6b70] mt-1 max-w-[28ch]">{hint}</div>}
+    <div className="flex flex-col items-center justify-center px-6 py-7 text-center border border-dashed border-[#1e1e22] rounded-[8px] bg-[#0f0f11]">
+      <div className="w-8 h-8 rounded-[8px] bg-[#111113] border border-[#1e1e22] flex items-center justify-center text-[13px] text-[#6b6b70] mb-2.5" aria-hidden>{icon}</div>
+      <div className="text-[13px] font-medium text-[#d4d4d8]">{title}</div>
+      {hint && <div className="text-[13px] text-[#8a8a90] mt-1 max-w-[32ch] leading-snug">{hint}</div>}
+      {action && <div className="mt-3">{action}</div>}
     </div>
   );
 }
