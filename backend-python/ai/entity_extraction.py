@@ -5,6 +5,7 @@ can operate on a consistent format.
 """
 
 import re
+from typing import List
 
 from .schemas import EntitySchema, generate_entity_id
 
